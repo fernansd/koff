@@ -1,0 +1,25 @@
+{
+  "name": "koff",
+  "version": "0.1.0",
+  "description": "AI Project Scaffolding CLI to quickly bootstrap AI-optimized environments",
+  "bin": {
+    "koff": "bin/koff.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fernansd/koff.git"
+  },
+  "author": "Fernando",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fernansd/koff/issues"
+  },
+  "homepage": "https://github.com/fernansd/koff#readme",
+  "optionalDependencies": {
+    "@fernansd/koff-win32-x64": "0.1.0",
+    "@fernansd/koff-darwin-x64": "0.1.0",
+    "@fernansd/koff-darwin-arm64": "0.1.0",
+    "@fernansd/koff-linux-x64": "0.1.0",
+    "@fernansd/koff-linux-arm64": "0.1.0"
+  }
+}

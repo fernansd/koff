@@ -1,0 +1,22 @@
+{
+  "name": "@fernansd/koff-darwin-arm64",
+  "version": "0.1.0",
+  "description": "The darwin-arm64 binary for koff",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fernansd/koff.git"
+  },
+  "author": "Fernando",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fernansd/koff/issues"
+  },
+  "homepage": "https://github.com/fernansd/koff#readme",
+  "preferUnplugged": false
+}

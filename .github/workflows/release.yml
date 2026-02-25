@@ -1,0 +1,148 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-binaries:
+    name: Build Native Binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x64
+            target: x86_64-unknown-linux-gnu
+            ext: ""
+          - os: windows-latest
+            platform: win32-x64
+            target: x86_64-pc-windows-msvc
+            ext: ".exe"
+          - os: macos-latest
+            platform: darwin-x64
+            target: x86_64-apple-darwin
+            ext: ""
+          - os: macos-14
+            platform: darwin-arm64
+            target: aarch64-apple-darwin
+            ext: ""
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Build wheel
+        run: uv build --wheel
+
+      - name: Build PyApp Bootstrapper
+        env:
+          PYAPP_PROJECT_NAME: koff
+          PYAPP_PROJECT_VERSION: ${{ github.ref_name }} # e.g. v0.1.0 optionally strip 'v'
+          PYAPP_PROJECT_FEATURES: ""
+          PYAPP_PYTHON_VERSION: "3.12"
+          PYAPP_IS_GUI: "0"
+        shell: bash
+        run: |
+          # Strip 'v' from tag if present for pip compatibility
+          VERSION=${GITHUB_REF_NAME#v}
+          # Assuming wheel is built in dist/
+          WHEEL=$(ls dist/*.whl | head -n 1)
+          
+          export PYAPP_PROJECT_VERSION=$VERSION
+          export PYAPP_DISTRIBUTION_PATH=$(realpath $WHEEL)
+          
+          # Install pyapp for the target architecture
+          cargo install pyapp --target ${{ matrix.target }} --root out
+          
+          # Move binary to expected name
+          mkdir -p final_dist
+          mv out/bin/pyapp${{ matrix.ext }} final_dist/koff${{ matrix.ext }}
+
+      - name: Upload Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: koff-${{ matrix.platform }}
+          path: final_dist/koff${{ matrix.ext }}
+
+  publish-npm:
+    name: Publish NPM Packages
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Set Version
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      # Download all artifacts
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare NPM Packages
+        run: |
+          # Loop through each target platform
+          for platform in win32-x64 linux-x64 darwin-x64 darwin-arm64; do
+            ext=""
+            if [ "$platform" = "win32-x64" ]; then ext=".exe"; fi
+            
+            pkg_dir="npm/packages/koff-$platform"
+            
+            # Update version in package.json
+            sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" $pkg_dir/package.json
+            
+            # Copy binary to package
+            cp artifacts/koff-$platform/koff$ext $pkg_dir/
+          done
+          
+          # Update version in main wrapper
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" npm/koff/package.json
+          
+          # Update optional dependencies versions in main wrapper
+          sed -i "s/\"@fernansd\/koff-.*\": \".*\"/\"@fernansd\/koff-.*\": \"$VERSION\"/g" npm/koff/package.json
+
+      - name: Publish Setup Check
+        run: |
+          if [ -z "${{ secrets.NODE_AUTH_TOKEN }}" ]; then
+            echo "NODE_AUTH_TOKEN is missing. Cannot publish to NPM."
+            exit 1
+          fi
+
+      - name: Publish Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: |
+          for platform in win32-x64 linux-x64 darwin-x64 darwin-arm64; do
+            cd npm/packages/koff-$platform
+            npm publish --access public
+            cd -
+          done
+          
+          cd npm/koff
+          npm publish --access public

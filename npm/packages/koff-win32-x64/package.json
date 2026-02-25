@@ -1,0 +1,22 @@
+{
+  "name": "@fernansd/koff-win32-x64",
+  "version": "0.1.0",
+  "description": "The win32-x64 binary for koff",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fernansd/koff.git"
+  },
+  "author": "Fernando",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fernansd/koff/issues"
+  },
+  "homepage": "https://github.com/fernansd/koff#readme",
+  "preferUnplugged": false
+}
