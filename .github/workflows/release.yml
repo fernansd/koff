@@ -51,9 +51,6 @@ jobs:
         with:
           version: "latest"
 
-      - name: Build wheel
-        run: uv build --wheel
-
       - name: Build PyApp Bootstrapper
         env:
           PYAPP_PROJECT_NAME: koff
@@ -65,11 +62,9 @@ jobs:
         run: |
           # Strip 'v' from tag if present for pip compatibility
           VERSION=${GITHUB_REF_NAME#v}
-          # Assuming wheel is built in dist/
-          WHEEL=$(ls dist/*.whl | head -n 1)
           
           export PYAPP_PROJECT_VERSION=$VERSION
-          export PYAPP_DISTRIBUTION_PATH=$(realpath $WHEEL)
+          export PYAPP_PROJECT_PATH=.
           
           # Install pyapp for the target architecture
           cargo install pyapp --target ${{ matrix.target }} --root out
