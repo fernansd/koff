@@ -1,0 +1,19 @@
+[project]
+name = "koff"
+version = "0.1.0"
+description = "AI Project Scaffolding CLI to quickly bootstrap AI-optimized environments"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Fernando", email = "" }]
+license = { text = "MIT" }
+dependencies = [
+    "rich>=14.3.3",
+    "typer>=0.24.1",
+]
+
+[project.scripts]
+koff = "koff.main:_main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
