@@ -116,17 +116,14 @@ jobs:
             pkg_dir="npm/packages/koff-$platform"
             
             # Update version in package.json
-            sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" $pkg_dir/package.json
+            node -e "let fs=require('fs'); let p=JSON.parse(fs.readFileSync('$pkg_dir/package.json')); p.version='$VERSION'; fs.writeFileSync('$pkg_dir/package.json', JSON.stringify(p, null, 2));"
             
             # Copy binary to package
             cp artifacts/koff-$platform/koff$ext $pkg_dir/
           done
           
-          # Update version in main wrapper
-          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" npm/koff/package.json
-          
-          # Update optional dependencies versions in main wrapper
-          sed -i "s/\"@fernansd\/koff-.*\": \".*\"/\"@fernansd\/koff-.*\": \"$VERSION\"/g" npm/koff/package.json
+          # Update version and optional dependencies in main wrapper
+          node -e "let fs=require('fs'); let p=JSON.parse(fs.readFileSync('npm/koff/package.json')); p.version='$VERSION'; for(let dep in p.optionalDependencies) { p.optionalDependencies[dep]='$VERSION'; } fs.writeFileSync('npm/koff/package.json', JSON.stringify(p, null, 2));"
 
       - name: Publish Setup Check
         run: |
