@@ -30,6 +30,9 @@ koff fernansd/fastapi-template
 
 # You can also use explicit local paths
 koff ./templates/my-local-template my-app
+
+# Use a custom base directory for temporary clone files
+koff fernansd/fastapi-template my-app --temp-dir /tmp/koff
 ```
 
 ### 2. Inject AI Context into an Existing Project

@@ -72,7 +72,7 @@ def copy_template(src_path: Path, dest_path: Path):
             else:
                 console.print(f"[yellow]Skipping {item.name}, already exists.[/]")
 
-def scaffold_project(source: str, destination: str):
+def scaffold_project(source: str, destination: str, temp_dir: str | None = None):
     """Main scaffolding logic."""
     dest_path = Path(destination).resolve()
     
@@ -80,7 +80,15 @@ def scaffold_project(source: str, destination: str):
         url = get_github_url(source)
         console.print(f"Fetching from GitHub: [bold blue]{url}[/]")
         
-        with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_root = None
+        if temp_dir is not None:
+            tmp_root_path = Path(temp_dir).expanduser().resolve()
+            if tmp_root_path.exists() and not tmp_root_path.is_dir():
+                raise NotADirectoryError(f"Temporary directory path is not a directory: {tmp_root_path}")
+            tmp_root_path.mkdir(parents=True, exist_ok=True)
+            tmp_root = str(tmp_root_path)
+
+        with tempfile.TemporaryDirectory(dir=tmp_root) as tmpdir:
             try:
                 subprocess.run(
                     ["git", "clone", "--depth", "1", url, tmpdir],

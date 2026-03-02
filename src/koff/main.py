@@ -9,12 +9,17 @@ console = Console()
 def scaffold(
     source: str = typer.Argument(..., help="Source to scaffold from (local path or github repo)"),
     destination: str = typer.Argument(".", help="Target directory to create the project in"),
+    temp_dir: str | None = typer.Option(
+        None,
+        "--temp-dir",
+        help="Base directory to create temporary clone workspace when source is a GitHub repository.",
+    ),
 ):
     """
     Scaffold a new project from a local template or a GitHub repository.
     """
     try:
-        core.scaffold_project(source, destination)
+        core.scaffold_project(source, destination, temp_dir=temp_dir)
         console.print(f"[bold green]Successfully scaffolded from {source} into {destination}![/]")
     except Exception as e:
         console.print(f"[bold red]Error:[/] {e}")
